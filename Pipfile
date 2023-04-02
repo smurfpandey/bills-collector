@@ -1,0 +1,27 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+pylint = "*"
+pylint-flask-sqlalchemy = "*"
+autopep8 = "*"
+pytest = "*"
+
+[packages]
+celery = "*"
+environs = "*"
+flask = "*"
+flask-caching = "*"
+flask-login = "*"
+flask-migrate = "*"
+flask-sqlalchemy = "*"
+gunicorn = "*"
+authlib = "*"
+requests = "*"
+psycopg2-binary = "*"
+sentry-sdk = {extras = ["flask"], version = "*"}
+
+[requires]
+python_version = "3.10"
