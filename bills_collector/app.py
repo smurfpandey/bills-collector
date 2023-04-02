@@ -7,6 +7,7 @@ import sys
 
 # 3rd party python packages
 from flask import Flask, render_template
+from flask_wtf.csrf import CSRFProtect
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -28,6 +29,10 @@ def create_app(config_object="bills_collector.config"):
     :param config_object: The configuration object to use.
     """
     app = Flask(__name__.split(".")[0])
+    
+    csrf = CSRFProtect()
+    csrf.init_app(app)
+
     app.config.from_object(config_object)
 
     # config file has STATIC_FOLDER='/static/dist'
