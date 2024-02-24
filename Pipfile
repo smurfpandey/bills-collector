@@ -10,7 +10,6 @@ autopep8 = "*"
 pytest = "*"
 
 [packages]
-celery = "*"
 environs = "*"
 flask = "*"
 flask-caching = "*"
@@ -22,7 +21,7 @@ authlib = "*"
 requests = "*"
 psycopg2-binary = "*"
 sentry-sdk = {extras = ["flask"], version = "*"}
-flask-wtf = "*"
+flask-bcrypt = "*"
 
 [requires]
 python_version = "3.10"
