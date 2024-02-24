@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Bills Collector{% endblock %}</title>
+    <link href="{{ url_for('static', filename='main.css')}}" rel="stylesheet">
+</head>
+
+<body class="min-h-screen bg-gray-900 static">
+    {% block body %}
+    {% endblock %}
+    <footer class="p-4 bg-white md:p-8 lg:p-10 dark:bg-gray-800 absolute bottom-0 w-screen">
+        <div class="mx-auto max-w-screen-xl text-center">
+            <a href="#" class="flex justify-center items-center text-2xl font-semibold text-gray-900 dark:text-white">
+                <img src="/static/images/logo.png" class="mr-2 h-8" alt="Bills Rover Logo" />
+                <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Bills Rover</span>
+            </a>
+            <p class="my-6 text-gray-500 dark:text-gray-400">Collect bills</p>
+            <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2024 <a href="#"
+                    class="hover:underline">Smurfville Inc™</a>. All Rights Reserved.</span>
+                    <br>
+            <a href="https://www.flaticon.com/free-icons/mars-rover" class="text-sm text-gray-500 sm:text-center dark:text-gray-400" title="mars rover icons">Mars rover icons created by Freepik -
+                Flaticon</a>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+    <script>const PAGE_NAME={% block jsPageName %}''{% endblock %};</script>
+    <script src="{{ url_for('static', filename='bundle.js')}}"></script>
+</body>
+</html>
