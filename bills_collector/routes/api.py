@@ -45,9 +45,14 @@ def get_linked_account_by_id(account_id):
     if account is None:
         return custom_error("", 404)
 
-    goog_app = GoogleClient(token=account.token_json).app
+    # ensure token is active
+    GoogleClient(token=account.token_json)
 
-    goog_app.ensure_active_token(token=goog_app.token)
+    # fetch token again incase it is refreshed
+    account = LinkedAccount.query.filter(
+        LinkedAccount.user_id == current_user.id,
+        LinkedAccount.id == account_id
+    ).first()
 
     dict_account = {
         'id': account.id,

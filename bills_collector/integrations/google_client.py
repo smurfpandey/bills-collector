@@ -23,6 +23,7 @@ class GoogleClient:
         """Contstructor"""
         if token is not None:
             self.app = self.__init_with_token(token)
+            self.app.ensure_active_token(token=token)
         else:
             # Find out what URL to hit for Google login
             # google_provider_cfg = get_google_provider_cfg()
