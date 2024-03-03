@@ -5,7 +5,6 @@ import flask
 from authlib.integrations.flask_client import OAuth
 from celery import Celery
 from flask_bcrypt import Bcrypt
-from flask_caching import Cache
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -46,7 +45,6 @@ class FlaskCelery(Celery):
 bcrypt = Bcrypt()
 db = SQLAlchemy()
 migrate = Migrate()
-cache = Cache()
 celery = FlaskCelery()
 login_manager = LoginManager()
 oauth = OAuth()

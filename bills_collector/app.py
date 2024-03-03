@@ -15,7 +15,6 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 # Local module imports
 from bills_collector.extensions import (
     bcrypt,
-    cache,
     db,
     migrate,
     celery,
@@ -70,7 +69,6 @@ def create_app(config_object="bills_collector.config"):
 def register_extensions(app):
     """Register Flask extensions."""
     bcrypt.init_app(app)
-    cache.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
     celery.init_app(app)

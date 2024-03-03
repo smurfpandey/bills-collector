@@ -14,6 +14,8 @@ main_bp = Blueprint(
 @login_required
 def home():
     """Logged-in User Dashboard."""
-    accounts = LinkedAccount.query.all()
+    accounts = LinkedAccount.query.filter(
+        LinkedAccount.user_id == current_user.id
+    ).all()
 
     return render_template('home.html.j2', current_user=current_user, linked_accounts=accounts)
