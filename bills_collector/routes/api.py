@@ -3,11 +3,11 @@ from datetime import datetime
 
 from flask import Blueprint, jsonify, make_response, request
 from flask_login import current_user, login_required
-from sqlalchemy.dialects import postgresql
 
 from bills_collector.extensions import db
 from bills_collector.integrations import GoogleClient
 from bills_collector.models import LinkedAccount, InboxRule
+from bills_collector.tasks import inbox_tasks
 
 # Blueprint Configuration
 api_bp = Blueprint(
@@ -46,7 +46,7 @@ def get_linked_account_by_id(account_id):
         return custom_error("", 404)
 
     # ensure token is active
-    GoogleClient(token=account.token_json)
+    goog_client = GoogleClient(token=account.token_json)
 
     # fetch token again incase it is refreshed
     account = LinkedAccount.query.filter(
@@ -59,6 +59,8 @@ def get_linked_account_by_id(account_id):
         'account_type': account.account_type,
         'access_token': account.access_token
     }
+
+    goog_client.close()
 
     return jsonify(dict_account), 200
 
@@ -126,3 +128,12 @@ def update_rule_for_email_account(account_id, rule_id):
     db.session.commit()
 
     return jsonify(inbox_rule), 200
+
+@api_bp.route('/run_task/', methods=['GET'])
+@login_required
+def run_task():
+    """Manually trigger task"""
+
+    inbox_tasks.check_inbox.delay()
+
+    return make_response('Ok', 200)

@@ -76,3 +76,41 @@ class GoogleClient:
     def close(self):
         """Method to close a oauth2session object"""
         self.app.close()
+
+    def fetch_inbox_emails(self, from_address, subject_text):
+        """Fetch emails from Inbox"""
+
+        api_url = 'https://gmail.googleapis.com/gmail/v1/users/me/messages'
+        query_data = {
+            'includeSpamTrash': 'false',
+            'q': f'has:attachment newer_than:40d in:INBOX from:{from_address} subject:{subject_text}',
+            'maxResults': 500
+        }
+
+        resp = self.app.get(api_url, params=query_data)
+
+        resp.raise_for_status()
+
+        return resp.json()
+
+    def fetch_one_email(self, message_id):
+        """Fetch email from Inbox"""
+
+        api_url = f'https://gmail.googleapis.com/gmail/v1/users/me/messages/{message_id}'
+
+        resp = self.app.get(api_url)
+
+        resp.raise_for_status()
+
+        return resp.json()
+
+    def get_email_attachment(self, message_id, attachment_id):
+        """Get Attachment of email"""
+
+        api_url = f'https://gmail.googleapis.com/gmail/v1/users/me/messages/{message_id}/attachments/{attachment_id}'
+
+        resp = self.app.get(api_url)
+
+        resp.raise_for_status()
+
+        return resp.json()
