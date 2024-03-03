@@ -1,0 +1,20 @@
+version: "3.2"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13.0-management-alpine
+    container_name: my-rabbit
+    hostname: my-rabbit
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  db:
+    image: postgres:16.2-alpine
+    container_name: db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: bills_collector
+      POSTGRES_USER: bills_collector
+      POSTGRES_DB: bills_collector
