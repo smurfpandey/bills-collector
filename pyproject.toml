@@ -20,6 +20,8 @@ flask-bcrypt = "^1.0.1"
 sentry-sdk = {extras = ["flask"], version = "^1.40.6"}
 celery = "^5.3.6"
 psycopg = {extras = ["binary", "pool"], version = "^3.1.18"}
+pydash = "^7.0.7"
+pikepdf = "^8.13.0"
 
 
 [build-system]
