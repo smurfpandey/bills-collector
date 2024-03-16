@@ -1,10 +1,11 @@
 """Email Inbox related tasks"""
 from datetime import datetime, timedelta
 import base64
+from os import environ
 
 from celery.utils.log import get_task_logger
 import pikepdf
-from pydash import filter_
+import requests
 from sqlalchemy import func
 
 from bills_collector.extensions import celery, db
@@ -13,6 +14,32 @@ from bills_collector.models import LinkedAccount, InboxRule
 
 
 logger = get_task_logger(__name__)
+
+dict_drive_apps = {}
+
+def get_drive_app(account_id):
+
+    if account_id not in dict_drive_apps:
+        the_app = GoogleClient(account_id=account_id)
+
+        dict_drive_apps[account_id] = the_app
+
+    return dict_drive_apps[account_id]
+
+def close_drive_apps():
+    for key in dict_drive_apps:
+        this_app = dict_drive_apps[key]
+        this_app.close();
+
+def ping_healthchecks(is_start):
+    """Ping Healthchecks.io service for monitoring"""
+
+    try:
+        ping_url = environ.get('HEALTH_CHECKS_IO_URL')
+        requests.get(ping_url, timeout=10)
+    except requests.RequestException as e:
+        # Log ping failure here...
+        print("Ping failed: %s" % e)
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
@@ -27,6 +54,8 @@ def check_inbox():
     """Check for new emails"""
 
     logger.info('START:: task execution check_inbox')
+
+    # ping_healthchecks()
 
     # 1. Get all inbox with atleast 1 rule
     inbox_accounts = db.session.query(
@@ -51,11 +80,14 @@ def check_inbox():
             # 4. For every email, check if it has already been processed
             # 4.1. If not, download and save attachment to destination
 
+    # TODO: close all drive apps
+    close_drive_apps()
+
 @celery.task()
 def process_gmail_inbox(inbox_id):
     """Fetch emails as per the rules for this inbox"""
 
-    account = LinkedAccount.query.filter(
+    inbox_account = LinkedAccount.query.filter(
         LinkedAccount.id == inbox_id
     ).first()
 
@@ -63,12 +95,7 @@ def process_gmail_inbox(inbox_id):
         InboxRule.account_id == inbox_id
     ).all()
 
-    dict_account = {
-        'id': account.id,
-        'access_token': account.access_token
-    }
-
-    google_app = GoogleClient(token=account.token_json)
+    google_app = GoogleClient(token=inbox_account.token_json)
 
     for rule in inbox_rules:
         emails = google_app.fetch_inbox_emails(from_address=rule.email_from, subject_text=rule.email_subject)
@@ -95,6 +122,14 @@ def process_gmail_inbox(inbox_id):
 
                             pdf = pikepdf.open(file_path, password=rule.attachment_password)
                             pdf.save(file_path + "_no_password.pdf")
+
+                            # upload file to the destination
+                            drive_app = get_drive_app(rule.destination_account_id)
+                            drive_folder_id = rule.destination_folder_id
+
+    google_app.close()
+
+
 
 
 
