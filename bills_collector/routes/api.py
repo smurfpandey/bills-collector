@@ -1,5 +1,5 @@
 """Routes for API"""
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, make_response, request
 from flask_login import current_user, login_required
@@ -64,6 +64,27 @@ def get_linked_account_by_id(account_id):
 
     return jsonify(dict_account), 200
 
+@api_bp.route('/linked_accounts/<account_id>/refresh_token', methods=['POST'])
+@login_required
+def refresh_account_tokens(account_id):
+    """Refresh tokens for this account"""
+
+    account = LinkedAccount.query.filter(
+        LinkedAccount.user_id == current_user.id,
+        LinkedAccount.id == account_id
+    ).first()
+
+    if account is None:
+        return custom_error("", 404)
+
+    # ensure token is active
+    try:
+        goog_client = GoogleClient(token=account.token_json)
+    except Exception as e:
+        print(e)
+
+    return make_response('Ok', 200)
+
 @api_bp.route('/linked_accounts/<account_id>/inbox_rules')
 @login_required
 def get_rules_for_email_account(account_id):
@@ -84,7 +105,7 @@ def create_rule_for_email_account(account_id):
     req_data = request.json
 
     inbox_rule = InboxRule(
-        user_id=current_user.id,
+        user_id = current_user.id,
         account_id = account_id,
         name = req_data['name'],
         email_from = req_data['email_from'],
@@ -117,7 +138,7 @@ def update_rule_for_email_account(account_id, rule_id):
         return custom_error("", 404)
 
     inbox_rule.name = req_data['name']
-    inbox_rule.last_update_at = datetime.utcnow()
+    inbox_rule.last_update_at = datetime.now(timezone.utc)
     inbox_rule.email_from = req_data['email_from']
     inbox_rule.email_subject = req_data['email_subject']
     inbox_rule.attachment_password = req_data['attachment_password']

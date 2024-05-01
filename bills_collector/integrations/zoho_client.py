@@ -62,7 +62,7 @@ class ZohoClient:
         item.access_token = token['access_token']
         item.refresh_token = token['refresh_token']
         item.expires_at = datetime.fromtimestamp(token['expires_at'], timezone.utc)
-        item.last_update_at = datetime.utcnow()
+        item.last_update_at = datetime.now(timezone.utc)
 
         db.session.commit()
         return None

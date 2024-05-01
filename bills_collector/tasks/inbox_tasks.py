@@ -1,5 +1,5 @@
 """Email Inbox related tasks"""
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 import base64
 from os import environ
 
@@ -10,14 +10,14 @@ from sqlalchemy import func
 
 from bills_collector.extensions import celery, db
 from bills_collector.integrations import GoogleClient
-from bills_collector.models import LinkedAccount, InboxRule
+from bills_collector.models import LinkedAccount, InboxRule, ProcessedEmail
 
 
 logger = get_task_logger(__name__)
 
 dict_drive_apps = {}
 
-def get_drive_app(account_id):
+def get_drive_app(account_id) -> GoogleClient:
 
     if account_id not in dict_drive_apps:
         the_app = GoogleClient(account_id=account_id)
@@ -80,8 +80,8 @@ def check_inbox():
             # 4. For every email, check if it has already been processed
             # 4.1. If not, download and save attachment to destination
 
-    # TODO: close all drive apps
-    close_drive_apps()
+    # TODO: close all drive apps after all tasks are done
+    # close_drive_apps()
 
 @celery.task()
 def process_gmail_inbox(inbox_id):
@@ -101,7 +101,18 @@ def process_gmail_inbox(inbox_id):
         emails = google_app.fetch_inbox_emails(from_address=rule.email_from, subject_text=rule.email_subject)
         if 'messages' in emails:
             for email in emails['messages']:
-                email_msg = google_app.fetch_one_email(email['id'])
+
+                email_id = email['id']
+
+                processed_email = ProcessedEmail.query.filter(
+                    ProcessedEmail.email_id == email_id,
+                    LinkedAccount.id == inbox_id
+                ).first()
+
+                if processed_email is not None:
+                    continue
+
+                email_msg = google_app.fetch_one_email(email_id)
 
                 payload = email_msg['payload']
                 payload_parts = payload.get('parts', [])
@@ -121,11 +132,24 @@ def process_gmail_inbox(inbox_id):
                                 f.write(file_data)
 
                             pdf = pikepdf.open(file_path, password=rule.attachment_password)
-                            pdf.save(file_path + "_no_password.pdf")
+                            file_name = f'{date.today().strftime("%Y-%m")}.pdf'
+                            file_path = f'tmp/{file_name}'
+                            pdf.save(file_path)
 
                             # upload file to the destination
                             drive_app = get_drive_app(rule.destination_account_id)
                             drive_folder_id = rule.destination_folder_id
+
+                            drive_app.upload_file_to_drive(file_mime_type=payload_mime, file_path=file_path, file_name=file_name, drive_folder_id=drive_folder_id)
+
+                            processed_email = ProcessedEmail(
+                                email_id = email_id,
+                                account_id = inbox_id
+                            )
+
+                            db.session.add(processed_email)
+                            db.session.commit()
+
 
     google_app.close()
 

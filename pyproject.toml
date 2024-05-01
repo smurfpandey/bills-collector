@@ -22,6 +22,8 @@ celery = "^5.3.6"
 psycopg = {extras = ["binary", "pool"], version = "^3.1.18"}
 pydash = "^7.0.7"
 pikepdf = "^8.13.0"
+google-api-python-client = "^2.127.0"
+google-auth = "^2.29.0"
 
 
 [build-system]

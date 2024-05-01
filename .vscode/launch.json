@@ -20,6 +20,22 @@
             ],
             "jinja": true,
             "justMyCode": false
+        }, {
+            "name": "Python: Celery",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "celery",
+            "console": "integratedTerminal",
+            "args": [
+                "-A",
+                "app:celery",
+                "worker",
+                "-B",
+                "-l",
+                "info",
+                "-P",
+                "solo",
+            ]
         }
     ]
 }
