@@ -90,7 +90,7 @@ def callback_google():
         existing_account.refresh_token = token['refresh_token']
         existing_account.user_profile = user_profile
         existing_account.expires_at = google_account.expires_at
-        existing_account.last_update_at = datetime.utcnow()
+        existing_account.last_update_at = datetime.now(timezone.utc)
 
     db.session.commit()
 

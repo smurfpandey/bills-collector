@@ -1,5 +1,5 @@
 """Routes for user authentication."""
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import redirect, Blueprint, url_for, render_template, request
 from flask_login import current_user, login_user, logout_user
@@ -54,7 +54,7 @@ def login_post():
     does_pass_match = bcrypt.check_password_hash(existing_user.password, password)
 
     if does_pass_match:
-        existing_user.last_login = datetime.utcnow()
+        existing_user.last_login = datetime.now(timezone.utc)
         db.session.commit() # Save changes to database
 
         login_user(existing_user, remember=remember_session)

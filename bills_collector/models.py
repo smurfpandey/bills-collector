@@ -1,6 +1,6 @@
 """Database models."""
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from uuid import uuid4
 
@@ -20,8 +20,8 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(40), unique=True, nullable=False)
     password = db.Column(db.LargeBinary(60), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    last_login = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     def __repr__(self):
         return '<User {}>'.format(self.name)
@@ -32,6 +32,7 @@ class LinkedAccount(db.Model):
     id: str
     account_type: str
     user_profile: dict
+    expires_at: datetime
 
     __tablename__ = 'linked_accounts'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
@@ -43,8 +44,8 @@ class LinkedAccount(db.Model):
     token_json = db.Column(JSONB)
     user_profile = db.Column(JSONB)
     expires_at = db.Column(db.DateTime, nullable=False)
-    last_update_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_update_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     #Relationships
     user = relationship('User')
@@ -77,8 +78,8 @@ class InboxRule(db.Model):
     destination_folder_name = db.Column(db.String(150))
     destination_account_id = db.Column(UUID(as_uuid=True), db.ForeignKey('linked_accounts.id'))
 
-    last_update_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_update_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     #Relationships
     user = relationship('User')
@@ -87,3 +88,19 @@ class InboxRule(db.Model):
 
     def __repr__(self):
         return '<InboxRule {}>'.format(self.id)
+
+@dataclass
+class ProcessedEmail(db.Model):
+    """Processed Email model"""
+    id: str
+
+    __tablename__ = 'processed_emails'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
+    email_id = db.Column(db.String(450), nullable=False)
+    account_id = db.Column(UUID(as_uuid=True), db.ForeignKey('linked_accounts.id'))
+    processed_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
+    account = relationship('LinkedAccount', foreign_keys=[account_id])
+
+    def __repr__(self):
+        return '<ProcessedEmail {}>'.format(self.id)

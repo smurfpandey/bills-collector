@@ -237,6 +237,22 @@ function App() {
 
             mdlChooseStorage.hide();
         });
+
+        [...document.getElementsByClassName('event-refresh-account-token')].forEach(function(elem) {
+            elem.addEventListener('click', async function(e){
+                e.preventDefault();
+
+                const accountId = this.dataset.accountId;
+                const response = await fetch('/api/linked_accounts/'+ accountId +'/refresh_token', {
+                    method: "POST", // or 'PUT'
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({}),
+                });
+            });
+        });
+
     };
 
     this.init = () => {
