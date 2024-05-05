@@ -30,7 +30,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=ghcr.io/$GITHUB_REPOSITORY
-          VERSION=$GITHUB_SHA_SHORT
+          VERSION=$CI_SHA_SHORT
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           echo ${TAGS}
           echo ::set-output name=tags::${TAGS}
