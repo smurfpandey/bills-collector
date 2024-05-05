@@ -7,11 +7,21 @@ from celery.utils.log import get_task_logger
 import pikepdf
 import requests
 from sqlalchemy import func
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from bills_collector.extensions import celery, db
 from bills_collector.integrations import GoogleClient
 from bills_collector.models import LinkedAccount, InboxRule, ProcessedEmail
 
+sentry_sdk.init(
+    dsn=environ.get('SENTRY_DSN'),
+    integrations=[
+        CeleryIntegration(),
+        SqlalchemyIntegration()
+    ]
+)
 
 logger = get_task_logger(__name__)
 
@@ -50,6 +60,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(timedelta(hours=12), check_inbox.s(), name='Check for new email in the Inbox every 12hrs')
 
 @celery.task()
+@sentry_sdk.monitor(monitor_slug='12hr-monitor-inbox')
 def check_inbox():
     """Check for new emails"""
 

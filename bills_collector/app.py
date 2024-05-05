@@ -25,7 +25,7 @@ from bills_collector.routes import views, auth, connect, api
 
 # Initialize Sentry
 sentry_sdk.init(
-    environ.get('SENTRY_DSN'),
+    dsn=environ.get('SENTRY_DSN'),
     integrations=[
         FlaskIntegration(),
         CeleryIntegration(),
