@@ -117,23 +117,23 @@ def connect_zoho():
         access_type='offline'
     )
 
-@connect_bp.route('/connect/zoho/callback')
-@login_required
-def callback_zoho():
-    """Handle callback from Zoho"""
+# @connect_bp.route('/connect/zoho/callback')
+# @login_required
+# def callback_zoho():
+#     """Handle callback from Zoho"""
 
-    session_scope = session['zoho_connect_scope']
-    token = zoho_app.authorize_access_token(scope=session_scope)
+#     session_scope = session['zoho_connect_scope']
+#     token = zoho_app.authorize_access_token(scope=session_scope)
 
-    print(token)
+#     print(token)
 
-    return token
+#     return token
 
-    zoho_account = LinkedAccount(
-        account_type='zoho',
-        account_id=token['userinfo']['sub'],
-        token_json=token,
-        user_profile=user_profile,
-        user_id=current_user.id,
-        expires_at=datetime.fromtimestamp(token['expires_at'], timezone.utc)
-    )
+#     zoho_account = LinkedAccount(
+#         account_type='zoho',
+#         account_id=token['userinfo']['sub'],
+#         token_json=token,
+#         user_profile=user_profile,
+#         user_id=current_user.id,
+#         expires_at=datetime.fromtimestamp(token['expires_at'], timezone.utc)
+#     )
