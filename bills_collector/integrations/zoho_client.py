@@ -12,16 +12,6 @@ from bills_collector.models import LinkedAccount
 class ZohoClient:
     """ Zoho client class"""
 
-    def auth_client(client, client_auth, method, uri, headers, body):
-        url = uri
-        params = {'client_id':client.app.client_id,'client_secret':client.app.client_secret}
-        req = PreparedRequest()
-        req.prepare_url(url, params)
-        uri = req.url #+ '&' + body
-        body = None
-        print(uri)
-        return uri, headers, body
-
     def __init__(self, token=None):
         """Contstructor"""
         if token is not None:
