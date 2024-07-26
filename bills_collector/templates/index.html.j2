@@ -28,6 +28,7 @@
     </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
     <script>const PAGE_NAME={% block jsPageName %}''{% endblock %};</script>
+    <script>window.CSRF_TOKEN='{{ csrf_token() }}';</script>
     <script src="{{ url_for('static', filename='bundle.js')}}"></script>
 </body>
 </html>
