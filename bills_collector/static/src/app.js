@@ -76,6 +76,7 @@ function App() {
                     method: "POST", // or 'PUT'
                     headers: {
                         "Content-Type": "application/json",
+                        "X-CSRFToken": window.CSRF_TOKEN
                     },
                     body: JSON.stringify(thisRule),
                 });
@@ -247,6 +248,7 @@ function App() {
                     method: "POST", // or 'PUT'
                     headers: {
                         "Content-Type": "application/json",
+                        "X-CSRFToken": window.CSRF_TOKEN
                     },
                     body: JSON.stringify({}),
                 });

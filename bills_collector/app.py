@@ -19,7 +19,8 @@ from bills_collector.extensions import (
     migrate,
     celery,
     login_manager,
-    oauth
+    oauth,
+    csrf
 )
 from bills_collector.routes import views, auth, connect, api
 
@@ -41,6 +42,7 @@ def create_app(config_object="bills_collector.config"):
     """
     app = Flask(__name__.split(".")[0])
     app.config.from_object(config_object)
+
 
     # config file has STATIC_FOLDER='/static/dist'
     app.static_url_path=app.config.get('STATIC_FOLDER')
@@ -74,6 +76,7 @@ def register_extensions(app):
     celery.init_app(app)
     login_manager.init_app(app)
     oauth.init_app(app)
+    csrf.init_app(app)
 
 def register_blueprints(app):
     """Register Flask blueprints."""

@@ -1,7 +1,8 @@
 """Routes for API"""
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, make_response, request
+from authlib.integrations.base_client import OAuthError
+from flask import Blueprint, jsonify, make_response, request, current_app
 from flask_login import current_user, login_required
 
 from bills_collector.extensions import db
@@ -80,8 +81,9 @@ def refresh_account_tokens(account_id):
     # ensure token is active
     try:
         goog_client = GoogleClient(token=account.token_json)
-    except Exception as e:
-        print(e)
+    except OAuthError as e:
+        current_app.logger.exception(e)
+        return make_response('Not Ok', 410)
 
     return make_response('Ok', 200)
 
@@ -156,5 +158,27 @@ def run_task():
     """Manually trigger task"""
 
     inbox_tasks.check_inbox.delay()
+
+    return make_response('Ok', 200)
+
+@api_bp.route('/linked_accounts/<account_id>/   ', methods=['GET'])
+@login_required
+def check_account_connectivity(account_id):
+    """Check if account is still linked"""
+
+    account = LinkedAccount.query.filter(
+        LinkedAccount.user_id == current_user.id,
+        LinkedAccount.id == account_id
+    ).first()
+
+    if account is None:
+        return custom_error("", 404)
+
+    # ensure token is active
+    goog_client = None
+    try:
+        goog_client = GoogleClient(token=account.token_json)
+    except Exception as e:
+        print(e)
 
     return make_response('Ok', 200)
