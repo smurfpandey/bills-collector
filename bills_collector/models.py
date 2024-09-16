@@ -24,7 +24,7 @@ class User(UserMixin, db.Model):
     last_login = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     def __repr__(self):
-        return '<User {}>'.format(self.name)
+        return '<User: {}>'.format(self.name)
 
 @dataclass
 class LinkedAccount(db.Model):

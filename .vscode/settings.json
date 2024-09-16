@@ -1,0 +1,12 @@
+{
+    "python.testing.pytestArgs": [
+        "-v",
+        "-s",
+        "--cov=bills_collector/",
+        "--cov-report=html",
+        "--pdb",
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

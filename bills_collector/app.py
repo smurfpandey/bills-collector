@@ -34,14 +34,16 @@ sentry_sdk.init(
     ]
 )
 
-def create_app(config_object="bills_collector.config"):
+def create_app():
     """Create application factory, as explained here:
     http://flask.pocoo.org/docs/patterns/appfactories/.
 
     :param config_object: The configuration object to use.
     """
     app = Flask(__name__.split(".")[0])
-    app.config.from_object(config_object)
+
+    config_type = environ.get('CONFIG_TYPE', default='bills_collector.config.DevelopmentConfig')
+    app.config.from_object(config_type)
 
 
     # config file has STATIC_FOLDER='/static/dist'
