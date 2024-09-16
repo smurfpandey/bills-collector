@@ -1,4 +1,4 @@
-FROM arm64v8/python:3.10.14 as python-base
+FROM arm64v8/python:3.12-slim-bullseye AS python-base
 
 # Setup env
 ENV LANG C.UTF-8
@@ -50,7 +50,7 @@ RUN --mount=type=cache,target=/root/.cache \
 # PRODUCTION
 # Final image used for runtime
 ################################
-FROM python-base as production
+FROM python-base AS production
 
 ENV FASTAPI_ENV=production
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
