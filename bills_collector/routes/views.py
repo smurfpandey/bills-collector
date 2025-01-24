@@ -18,4 +18,4 @@ def home():
         LinkedAccount.user_id == current_user.id
     ).all()
 
-    return render_template('home.html.j2', current_user=current_user, linked_accounts=accounts)
+    return render_template('home.html', current_user=current_user, linked_accounts=accounts)
