@@ -13,7 +13,7 @@
     {% block body %}
     {% endblock %}
     <footer class="p-4 bg-white md:p-8 lg:p-10 dark:bg-gray-800 absolute bottom-0 w-screen">
-        <div class="mx-auto max-w-screen-xl text-center">
+        <div class="mx-auto max-w-(--breakpoint-xl) text-center">
             <a href="#" class="flex justify-center items-center text-2xl font-semibold text-gray-900 dark:text-white">
                 <img src="/static/images/logo.png" class="mr-2 h-8" alt="Bills Rover Logo" />
                 <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Bills Rover</span>
@@ -26,7 +26,7 @@
                 Flaticon</a>
         </div>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.0.0/dist/flowbite.min.js" integrity="sha256-RV6wrUbQsUVafqcoaIBufocY5qx8oY0wyRP3aoAOUgI=" crossorigin="anonymous"></script>
     <script>const PAGE_NAME={% block jsPageName %}''{% endblock %};</script>
     <script>window.CSRF_TOKEN='{{ csrf_token() }}';</script>
     <script src="{{ url_for('static', filename='bundle.js')}}"></script>

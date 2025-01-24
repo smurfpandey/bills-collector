@@ -16,7 +16,6 @@ class Config(object):
     ENV = 'development'
     DEBUG = False
     SECRET_KEY = env.str('SECRET_KEY', '')
-    APP_BASE_URL = env.str('APP_BASE_URL', '') # Base URL of the app
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
     LOG_LEVEL = env.str('LOG_LEVEL', default="INFO")
     PREFERRED_URL_SCHEME = 'https'
@@ -41,6 +40,7 @@ class Config(object):
 
     # Celery
     broker_url = env.str('CELERY_BROKER_URL', '')
+    broker_transport_options = { 'global_keyprefix': 'bills_collector' }
     # result_backend = env.str('CELERY_RESULT_BACKEND')
 
 class ProductionConfig(Config):

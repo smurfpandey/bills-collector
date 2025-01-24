@@ -1,8 +1,8 @@
-FROM arm64v8/python:3.12-slim-bullseye AS python-base
+FROM python:3.12-slim-bullseye AS python-base
 
 # Setup env
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONFAULTHANDLER=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=on
@@ -46,6 +46,14 @@ COPY poetry.lock pyproject.toml ./
 RUN --mount=type=cache,target=/root/.cache \
     poetry install
 
+FROM node:20.11.1-alpine3.19 AS node-base
+
+COPY . /app/
+WORKDIR /app
+
+RUN npm ci
+RUN npm run build
+
 ################################
 # PRODUCTION
 # Final image used for runtime
@@ -55,5 +63,8 @@ FROM python-base AS production
 ENV FASTAPI_ENV=production
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 COPY . /app/
+COPY --from=node-base /app/bills_collector/static/dist /app/bills_collector/static/dist
+RUN chmod +x /app/entrypoint.sh
 WORKDIR /app
-CMD [ "gunicorn", "-b 0.0.0.0:5000", "bills_collector.app:create_app()"]
+
+CMD [ "/app/entrypoint.sh" ]

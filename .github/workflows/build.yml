@@ -37,12 +37,12 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@v2
         with:
-          poetry-version: '1.8.3'
+          poetry-version: "1.8.3"
 
       - name: Set up cache
         uses: actions/cache@v4
@@ -60,12 +60,12 @@ jobs:
 
       - name: Run tests
         run: |
-            poetry run pytest --cov --cov-report=xml
+          poetry run pytest --cov --cov-report=xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build:
@@ -83,7 +83,8 @@ jobs:
           VERSION=$CI_SHA_SHORT
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           echo ${TAGS}
-          echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=tags::${tags}
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - name: setup platform emulator
         uses: docker/setup-qemu-action@v3
       - name: setup multi-arch docker build
@@ -109,7 +110,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.prep.outputs.tags }}
           cache-from: type=gha
