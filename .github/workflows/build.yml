@@ -63,7 +63,7 @@ jobs:
           poetry run pytest --cov --cov-report=xml
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v4.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -83,14 +83,13 @@ jobs:
           VERSION=$CI_SHA_SHORT
           TAGS="${DOCKER_IMAGE}:${VERSION}"
           echo ${TAGS}
-          echo ::set-output name=tags::${tags}
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
       - name: setup platform emulator
         uses: docker/setup-qemu-action@v3
       - name: setup multi-arch docker build
         uses: docker/setup-buildx-action@v3
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
