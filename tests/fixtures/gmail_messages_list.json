@@ -1,0 +1,13 @@
+{
+  "messages": [
+    {
+      "id": "test_email_id_1",
+      "threadId": "thread_1"
+    },
+    {
+      "id": "test_email_id_2",
+      "threadId": "thread_1"
+    }
+  ],
+  "resultSizeEstimate": 2
+} 

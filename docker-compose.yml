@@ -1,20 +1,55 @@
 version: "3.2"
 
 services:
-  rabbitmq:
-    image: rabbitmq:3.13.0-management-alpine
-    container_name: my-rabbit
-    hostname: my-rabbit
+  valkey:
+    image: valkey/valkey:8.0.0-alpine3.20
+    container_name: valkey
+    hostname: valkey
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
     ports:
-      - "15672:15672"
-      - "5672:5672"
+      - "6379:6379"
 
   db:
     image: postgres:16.2-alpine
     container_name: db
     ports:
       - "5432:5432"
+    env_file: "app.env"
     environment:
       POSTGRES_PASSWORD: bills_collector
       POSTGRES_USER: bills_collector
       POSTGRES_DB: bills_collector
+
+  # db_test:
+  #   image: postgres:16.2-alpine
+  #   container_name: db_test
+  #   environment:
+  #     POSTGRES_USER: myuser
+  #     POSTGRES_PASSWORD: mypassword
+  #     POSTGRES_DB: mydatabase_test
+  #   ports:
+  #     - "5433:5432"  # 5433 is the port for the test database
+
+  app:
+    image: ghcr.io/smurfpandey/bills-collector:eddf793b
+    container_name: app
+    ports:
+      - "5000:5000"
+    env_file: "docker.env"
+      
+
+  # app_worker:
+  #   image: bills_collector:v1
+  #   container_name: app_worker
+  #   command: celery -A app:celery worker -B -l info
+  #   links:
+  #     - db
+  #     - valkey
+  #   environment:
+  #     - DATABASE_URL=postgresql+psycopg://bills_collector:bills_collector@db:5432/bills_collector
+  #     - CELERY_BROKER_URL=redis://valkey:6379/0
+  #     - CONFIG_TYPE=bills_collector.config.ProductionConfig

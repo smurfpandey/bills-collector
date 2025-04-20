@@ -20,5 +20,5 @@ COPY . .
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+# Run Celery worker
+CMD ["celery", "-A", "app.celery", "worker", "--loglevel=info"] 

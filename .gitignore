@@ -77,8 +77,7 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# IPython
-profile_default/
+# IPython 
 ipython_config.py
 
 # pyenv
@@ -103,6 +102,7 @@ celerybeat.pid
 
 # Environments
 .env
+*.env
 .venv
 env/
 venv/
@@ -132,3 +132,5 @@ node_modules/
 dist/
 archive/
 tmp/
+
+docker-compose.yml

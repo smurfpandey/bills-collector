@@ -1,0 +1,20 @@
+{
+  "id": "test_email_id_1",
+  "threadId": "thread_1",
+  "labelIds": ["INBOX"],
+  "snippet": "Your monthly bill",
+  "payload": {
+    "mimeType": "multipart/mixed",
+    "headers": [
+      {"name": "From", "value": "bills@company.com"},
+      {"name": "Subject", "value": "Monthly Bill"}
+    ],
+    "parts": [
+      {
+        "mimeType": "application/pdf",
+        "filename": "bill.pdf",
+        "body": {"attachmentId": "test_attachment_id"}
+      }
+    ]
+  }
+} 
