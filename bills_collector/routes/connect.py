@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 
 
 from bills_collector.extensions import db, login_manager, bcrypt
-from bills_collector.integrations import GoogleClient, ZohoClient
+from bills_collector.integrations import GoogleClient
 from bills_collector.models import LinkedAccount
 
 # Blueprint Configuration
@@ -15,7 +15,6 @@ connect_bp = Blueprint(
 )
 
 google_app = GoogleClient().app
-zoho_app = ZohoClient().app
 
 def get_google_scope(connect_type):
     default_scope = ['email', 'openid', 'profile']
@@ -37,7 +36,7 @@ def connect_google():
     connect_scope = get_google_scope(connect_type)
 
     if connect_scope is None:
-        return abort(400)
+        return abort(400, description='Invalid connect type')
 
     connect_scope = ' '.join(connect_scope)
 
@@ -96,26 +95,26 @@ def callback_google():
 
     return redirect(url_for('main_bp.home'))
 
-@connect_bp.route('/connect/zoho')
-@login_required
-def connect_zoho():
-    """Initiate authentication request with Zoho"""
+# @connect_bp.route('/connect/zoho')
+# @login_required
+# def connect_zoho():
+#     """Initiate authentication request with Zoho"""
 
-    redirect_uri = url_for('connect_bp.callback_zoho', _external=True)
-    connect_scope = ' '.join([
-        'VirtualOffice.folders.READ',
-        'VirtualOffice.messages.READ',
-        'VirtualOffice.attachments.READ',
-        'VirtualOffice.accounts.READ'
-    ])
+#     redirect_uri = url_for('connect_bp.callback_zoho', _external=True)
+#     connect_scope = ' '.join([
+#         'VirtualOffice.folders.READ',
+#         'VirtualOffice.messages.READ',
+#         'VirtualOffice.attachments.READ',
+#         'VirtualOffice.accounts.READ'
+#     ])
 
-    session['zoho_connect_scope'] = connect_scope
+#     session['zoho_connect_scope'] = connect_scope
 
-    return zoho_app.authorize_redirect(
-        redirect_uri,
-        scope=connect_scope,
-        access_type='offline'
-    )
+#     return zoho_app.authorize_redirect(
+#         redirect_uri,
+#         scope=connect_scope,
+#         access_type='offline'
+#     )
 
 # @connect_bp.route('/connect/zoho/callback')
 # @login_required

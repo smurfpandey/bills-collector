@@ -6,8 +6,7 @@ import tinybind from 'tinybind';
 import './app.css';
 
 function App() {
-    let mdlInboxRules, mdlChooseStorage;
-    const $mdlInboxRules = document.getElementById('inbox-rules-modal');
+    let mdlChooseStorage;
     const $mdlChooseStorage = document.getElementById('choose-storage-modal');
     const $ddlSelectStorage = document.getElementById('ddlSelectStorage');
     const $svgChooseFolderLoading = document.getElementById('svgChooseFolderLoading');
@@ -24,7 +23,7 @@ function App() {
             const thisIndex = args.$index;
             const thisRule = objInboxRules.inbox_rules[thisIndex];
 
-            if(thisRule['id']) {
+            if (thisRule['id']) {
                 // delete rule from db
             } else {
                 // just remove locally
@@ -40,10 +39,10 @@ function App() {
 
             const thisIndex = args.$index;
             const thisRule = objInboxRules.inbox_rules[thisIndex];
-            const accountId = $mdlInboxRules.dataset.accountId;
+            const accountId = document.getElementById('tblInboxRules').dataset.accountId;
 
             // validate object
-            if(!thisRule['email_from']) {
+            if (!thisRule['email_from']) {
                 $thisRow.querySelector('input.input-inbox-rule-email-from').classList.add(...inputErrorClass);
                 $thisRow.querySelector('input.input-inbox-rule-email-from').classList.remove(...inputValidClass);
             } else {
@@ -51,14 +50,14 @@ function App() {
                 $thisRow.querySelector('input.input-inbox-rule-email-from').classList.add(...inputValidClass);
             }
 
-            if(!thisRule['attachment_password']) {
+            if (!thisRule['attachment_password']) {
                 thisRule['attachment_password'] = '';
             }
 
             thisRule['apply_loading'] = true;
-            if(thisRule['id']) {
+            if (thisRule['id']) {
                 // update existing rule
-                const reqUrl = '/api/linked_accounts/'+ accountId +'/inbox_rules/' + thisRule['id']
+                const reqUrl = '/api/linked_accounts/' + accountId + '/inbox_rules/' + thisRule['id']
                 const response = await fetch(reqUrl, {
                     method: "POST", // or 'PUT'
                     headers: {
@@ -72,7 +71,7 @@ function App() {
                 }
             } else {
                 // create new rule
-                const response = await fetch('/api/linked_accounts/'+ accountId +'/inbox_rules', {
+                const response = await fetch('/api/linked_accounts/' + accountId + '/inbox_rules', {
                     method: "POST", // or 'PUT'
                     headers: {
                         "Content-Type": "application/json",
@@ -113,14 +112,14 @@ function App() {
     };
 
     const fnLoadInboxRules = async (accountId) => {
-        const response = await fetch('/api/linked_accounts/'+ accountId +'/inbox_rules');
+        const response = await fetch('/api/linked_accounts/' + accountId + '/inbox_rules');
         const data = await response.json();
         objInboxRules.inbox_rules = data.inbox_rules;
     };
 
-    const fnGetLinkedAccount = async(accountId) => {
-        const response = await fetch('/api/linked_accounts/'+ accountId);
-        if(response.ok) {
+    const fnGetLinkedAccount = async (accountId) => {
+        const response = await fetch('/api/linked_accounts/' + accountId);
+        if (response.ok) {
             const data = await response.json();
             return data;
         } else {
@@ -129,17 +128,7 @@ function App() {
 
     }
 
-    const initModals = () => {
-        mdlInboxRules = new Modal($mdlInboxRules, {
-            closable: true,
-            onHide: () => {
-                $mdlInboxRules.dataset.accountId = '';
-            },
-            onShow: () => {
-                fnLoadInboxRules($mdlInboxRules.dataset.accountId);
-            },
-        });
-
+    const initModals = (pageName) => {
         mdlChooseStorage = new Modal($mdlChooseStorage, {
             closable: true,
             onHide: () => {
@@ -161,90 +150,78 @@ function App() {
         picker.setVisible(true);
     };
 
-    const fnAttachEventListener = () => {
-        document.getElementById('btnShowDrivePicker').addEventListener('click', () => {
-            // A simple callback implementation.
-            function pickerCallback(data) {
-                let url = 'nothing';
-
-            }
-        });
-
-        document.getElementById('btnCloseIBRuleModal').addEventListener('click', () => {
-            mdlInboxRules.hide();
-        });
-
-        document.getElementById('btnCloseChooseStorageModal').addEventListener('click', () => {
-            mdlChooseStorage.hide();
-        });
-
-        document.getElementById('btnAddNewRule').addEventListener('click', () => {
-            objInboxRules.inbox_rules.push({
-                edit_mode: true
+    const fnAttachEventListener = (pageName) => {
+        if (pageName === 'account_inbox_rules') {
+            document.getElementById('btnCloseChooseStorageModal').addEventListener('click', () => {
+                mdlChooseStorage.hide();
             });
-        });
+            document.getElementById('btnAddNewRule').addEventListener('click', () => {
+                // Add a new empty rule
+                objInboxRules.inbox_rules.push({
+                    edit_mode: true
+                });
+            });
+            [...document.getElementsByClassName('event-lnk-inbox-rules')].forEach(function (elem) {
+                elem.addEventListener('click', function (e) {
+                    e.preventDefault();
 
-        [...document.getElementsByClassName('event-lnk-inbox-rules')].forEach(function(elem) {
-            elem.addEventListener('click', function(e){
+                    $mdlInboxRules.dataset.accountId = this.dataset.accountId;
+                    mdlInboxRules.show();
+                });
+            });
+            document.getElementById('lnkChooseFolder').addEventListener('click', async (e) => {
                 e.preventDefault();
 
-                $mdlInboxRules.dataset.accountId = this.dataset.accountId;
-                mdlInboxRules.show();
-            });
-        });
+                const selectedAccountId = $ddlSelectStorage.value;
+                if (selectedAccountId === 'NaN')
+                    return;
 
-        document.getElementById('lnkChooseFolder').addEventListener('click', async (e) => {
-            e.preventDefault();
+                $svgChooseFolderLoading.classList.remove('collapse');
 
-            const selectedAccountId = $ddlSelectStorage.value;
-            if(selectedAccountId === 'NaN')
-                return;
+                const objAccount = await fnGetLinkedAccount(selectedAccountId);
+                $svgChooseFolderLoading.classList.add('collapse');
 
-            $svgChooseFolderLoading.classList.remove('collapse');
+                showGDrivePicker(objAccount.access_token, (data) => {
+                    if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+                        const selectedDoc = data.docs[0];
 
-            const objAccount = await fnGetLinkedAccount(selectedAccountId);
-            $svgChooseFolderLoading.classList.add('collapse');
+                        if (selectedDoc['type'] !== 'folder') {
+                            alert('Please select a folder');
+                            return;
+                        }
 
-            showGDrivePicker(objAccount.access_token, (data) => {
-                if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
-                    const selectedDoc = data.docs[0];
+                        $btnConfirmGDriveFolder.dataset.selectedFolderName = selectedDoc['name'];
+                        $btnConfirmGDriveFolder.dataset.selectedFolderId = selectedDoc['id'];
 
-                    if (selectedDoc['type'] !== 'folder') {
-                        alert('Please select a folder');
-                        return;
+                        document.getElementById('spFolderName').innerText = selectedDoc['name'];
                     }
-
-                    $btnConfirmGDriveFolder.dataset.selectedFolderName = selectedDoc['name'];
-                    $btnConfirmGDriveFolder.dataset.selectedFolderId = selectedDoc['id'];
-
-                    document.getElementById('spFolderName').innerText = selectedDoc['name'];
-                }
+                });
             });
-        });
 
-        $btnConfirmGDriveFolder.addEventListener('click', (e) => {
-            e.preventDefault();
+            $btnConfirmGDriveFolder.addEventListener('click', (e) => {
+                e.preventDefault();
 
-            const thisFolderName = $btnConfirmGDriveFolder.dataset.selectedFolderName;
-            const thisFolderId =  $btnConfirmGDriveFolder.dataset.selectedFolderId;
+                const thisFolderName = $btnConfirmGDriveFolder.dataset.selectedFolderName;
+                const thisFolderId = $btnConfirmGDriveFolder.dataset.selectedFolderId;
 
-            const thisIndex = $mdlChooseStorage.dataset.ruleIndex;
+                const thisIndex = $mdlChooseStorage.dataset.ruleIndex;
 
-            const thisRule = objInboxRules.inbox_rules[thisIndex];
+                const thisRule = objInboxRules.inbox_rules[thisIndex];
 
-            thisRule['destination_folder_id'] = thisFolderId;
-            thisRule['destination_folder_name'] = thisFolderName;
-            thisRule['destination_account_id'] = $ddlSelectStorage.value;
+                thisRule['destination_folder_id'] = thisFolderId;
+                thisRule['destination_folder_name'] = thisFolderName;
+                thisRule['destination_account_id'] = $ddlSelectStorage.value;
 
-            mdlChooseStorage.hide();
-        });
+                mdlChooseStorage.hide();
+            });
+        }
 
-        [...document.getElementsByClassName('event-refresh-account-token')].forEach(function(elem) {
-            elem.addEventListener('click', async function(e){
+        [...document.getElementsByClassName('event-refresh-account-token')].forEach(function (elem) {
+            elem.addEventListener('click', async function (e) {
                 e.preventDefault();
 
                 const accountId = this.dataset.accountId;
-                const response = await fetch('/api/linked_accounts/'+ accountId +'/refresh_token', {
+                const response = await fetch('/api/linked_accounts/' + accountId + '/refresh_token', {
                     method: "POST", // or 'PUT'
                     headers: {
                         "Content-Type": "application/json",
@@ -257,11 +234,18 @@ function App() {
 
     };
 
-    this.init = () => {
-        fnAttachEventListener();
-        initModals();
+    this.init = (pageName) => {
+        fnAttachEventListener(pageName);
+        initModals(pageName);
 
-        tinybind.bind(document.getElementById('tblInboxRules'), objInboxRules);
+        // Initialize page specific JavaScript
+        if (pageName === 'account_inbox_rules') {
+            const accountId = document.getElementById('tblInboxRules').dataset.accountId;
+            tinybind.bind(document.getElementById('tblInboxRules'), objInboxRules);
+
+            // Load inbox rules for the account
+            fnLoadInboxRules(accountId);
+        }
     }
 }
 
