@@ -164,7 +164,7 @@ class GoogleClient:
         # pylint: disable=maybe-no-member
         file = (
             drive_service.files()
-            .create(body=file_metadata, media_body=media, fields="id")
+            .create(body=file_metadata, media_body=media, fields="id,webViewLink")
             .execute()
         )
 

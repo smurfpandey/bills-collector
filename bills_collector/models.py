@@ -1,4 +1,5 @@
 """Database models."""
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -11,11 +12,12 @@ from sqlalchemy.orm import relationship
 
 from bills_collector.extensions import db
 
+
 @dataclass
 class User(UserMixin, db.Model):
     """User account model."""
 
-    __tablename__ = 'users'
+    __tablename__ = "users"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(40), unique=True, nullable=False)
@@ -24,19 +26,21 @@ class User(UserMixin, db.Model):
     last_login = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     def __repr__(self):
-        return '<User: {}>'.format(self.name)
+        return "<User: {}>".format(self.name)
+
 
 @dataclass
 class LinkedAccount(db.Model):
     """Linked account model."""
+
     id: str
     account_type: str
     user_profile: dict
     expires_at: datetime
 
-    __tablename__ = 'linked_accounts'
+    __tablename__ = "linked_accounts"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
     account_type = db.Column(db.String(50), nullable=False)
     account_id = db.Column(db.String(250), nullable=False)
     access_token = db.Column(db.String(500))
@@ -47,15 +51,17 @@ class LinkedAccount(db.Model):
     last_update_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    #Relationships
-    user = relationship('User')
+    # Relationships
+    user = relationship("User")
 
     def __repr__(self):
-        return '<Account {}>'.format(self.account_type)
+        return "<Account {}>".format(self.account_type)
+
 
 @dataclass
 class InboxRule(db.Model):
     """Inbox Rule model"""
+
     id: str
     account_id: str
     name: str
@@ -66,41 +72,80 @@ class InboxRule(db.Model):
     destination_folder_name: str
     destination_account_id: str
 
-    __tablename__ = 'inbox_rules'
+    __tablename__ = "inbox_rules"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
-    account_id = db.Column(UUID(as_uuid=True), db.ForeignKey('linked_accounts.id'))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
+    account_id = db.Column(UUID(as_uuid=True), db.ForeignKey("linked_accounts.id"))
     name = db.Column(db.String(150), nullable=False)
     email_from = db.Column(db.String(150), nullable=False)
     email_subject = db.Column(db.String(150), nullable=False)
     attachment_password = db.Column(db.String(50), nullable=False)
     destination_folder_id = db.Column(db.String(150))
     destination_folder_name = db.Column(db.String(150))
-    destination_account_id = db.Column(UUID(as_uuid=True), db.ForeignKey('linked_accounts.id'))
+    destination_account_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("linked_accounts.id")
+    )
 
     last_update_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    #Relationships
-    user = relationship('User')
-    account = relationship('LinkedAccount', foreign_keys=[account_id])
-    destination_account = relationship('LinkedAccount', foreign_keys=[destination_account_id])
+    # Relationships
+    user = relationship("User")
+    account = relationship("LinkedAccount", foreign_keys=[account_id])
+    destination_account = relationship(
+        "LinkedAccount", foreign_keys=[destination_account_id]
+    )
 
     def __repr__(self):
-        return '<InboxRule {}>'.format(self.id)
+        return "<InboxRule {}>".format(self.id)
+
 
 @dataclass
 class ProcessedEmail(db.Model):
     """Processed Email model"""
+
     id: str
 
-    __tablename__ = 'processed_emails'
+    __tablename__ = "processed_emails"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
-    email_id = db.Column(db.String(450), nullable=False)
-    account_id = db.Column(UUID(as_uuid=True), db.ForeignKey('linked_accounts.id'))
+    email_id = db.Column(
+        db.String(450), nullable=False
+    )  # Unique identifier for the email (from the service provider)
+    account_id = db.Column(UUID(as_uuid=True), db.ForeignKey("linked_accounts.id"))
     processed_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    account = relationship('LinkedAccount', foreign_keys=[account_id])
+    account = relationship("LinkedAccount", foreign_keys=[account_id])
 
     def __repr__(self):
-        return '<ProcessedEmail {}>'.format(self.id)
+        return "<ProcessedEmail {}>".format(self.id)
+
+
+@dataclass
+class Bill(db.Model):
+    """Bill model"""
+
+    id: str
+    account_id: str
+    email_id: str
+    amount: float
+    bill_date: datetime
+    due_date: datetime
+    status: Enum
+    bill_url: str
+
+    __tablename__ = "bills"
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
+    account_id = db.Column(UUID(as_uuid=True), db.ForeignKey("linked_accounts.id"))
+    email_id = db.Column(
+        db.String(450), nullable=False
+    )  # Unique identifier for the email (from the service provider)
+    amount = db.Column(db.Float, nullable=False, default=0.0)
+    bill_date = db.Column(db.DateTime, nullable=False)
+    due_date = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(50), nullable=False, default="pending")
+    bill_url = db.Column(db.String(500), nullable=True)
+
+    account = relationship("LinkedAccount", foreign_keys=[account_id])
+
+    def __repr__(self):
+        return "<Bill {}>".format(self.id)
