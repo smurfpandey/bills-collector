@@ -14,7 +14,7 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from bills_collector.extensions import celery, db
-from bills_collector.integrations import GoogleClient
+from bills_collector.integrations import GoogleClient, LLMClient
 from bills_collector.models import LinkedAccount, InboxRule, ProcessedEmail, Bill
 
 sentry_sdk.init(
@@ -105,6 +105,8 @@ def check_inbox():
     # TODO: close all drive apps after all tasks are done
     # close_drive_apps()
 
+    # TODO: clean up tmp folder after processing
+
 
 @celery.task()
 def process_gmail_inbox(inbox_id):
@@ -125,7 +127,7 @@ def process_gmail_inbox(inbox_id):
                 email_id = email["id"]
 
                 processed_email = ProcessedEmail.query.filter(
-                    ProcessedEmail.email_id == email_id, LinkedAccount.id == inbox_id
+                    ProcessedEmail.email_id == email_id, ProcessedEmail.account_id == inbox_id
                 ).first()
 
                 if processed_email is not None:
@@ -135,12 +137,17 @@ def process_gmail_inbox(inbox_id):
 
                 email_date = email_msg["internalDate"] #epoch time in ms
 
+                email_body = ""
+                pdf_file_path = ""
+                pdf_drive_url = ""
+
                 payload = email_msg["payload"]
                 payload_parts = payload.get("parts", [])
                 for part in payload_parts:
                     payload_mime = part["mimeType"]
                     logger.info(f"Payload Mime: {payload_mime}")
 
+                    # Get the pdf attachment if it exists
                     if (
                         payload_mime == "application/octet-stream"
                         or payload_mime == "application/pdf"
@@ -168,8 +175,8 @@ def process_gmail_inbox(inbox_id):
                                 int(email_date) / 1000  # Convert ms to seconds
                             )
                             file_name = f"{email_date.strftime('%Y-%m')}.pdf"
-                            file_path = f"tmp/{file_name}"
-                            pdf.save(file_path)
+                            pdf_file_path = f"tmp/{file_name}"
+                            pdf.save(pdf_file_path)
 
                             # upload file to the destination
                             drive_app = get_drive_app(rule.destination_account_id)
@@ -177,7 +184,7 @@ def process_gmail_inbox(inbox_id):
 
                             uploaded_file = drive_app.upload_file_to_drive(
                                 file_mime_type=payload_mime,
-                                file_path=file_path,
+                                file_path=pdf_file_path,
                                 file_name=file_name,
                                 drive_folder_id=drive_folder_id,
                             )
@@ -188,25 +195,71 @@ def process_gmail_inbox(inbox_id):
                                 )
                                 continue
 
-                            file_url = uploaded_file.get("webViewLink", "")
+                            pdf_drive_url = uploaded_file.get("webViewLink", "")
+                            
+                    # Get the email body text
+                    elif payload_mime == "text/plain":
+                        email_body = part.get("body", {}).get("data", "")
+                        if email_body:
+                            email_body = base64.urlsafe_b64decode(
+                                email_body.encode("UTF-8")
+                            ).decode("UTF-8")
+                            
 
-                            processed_email = ProcessedEmail(
-                                email_id=email_id, account_id=inbox_id
-                            )
+                # Create new bill entry
+                new_bill = Bill(
+                    account_id=inbox_id,
+                    email_id=email_id,
+                    bill_date=email_date,
+                    amount=0,  # Default amount, will be updated after extraction
+                    due_date=date.today() + timedelta(days=30),  # Default due date, will be updated after extraction
+                    status='pending',
+                    bill_url=pdf_drive_url,
+                )
 
-                            detected_bill = Bill(
-                                account_id=inbox_id,
-                                email_id=email_id,
-                                amount=0.0,  # TODO: Extract amount from PDF or body
-                                bill_date=date.today(),  # TODO: Extract bill date from PDF or body
-                                due_date=date.today()
-                                + timedelta(days=30),  # TODO: Extract due date from PDF or body
-                                status="pending",
-                                bill_url=file_url,
-                            )
+                # Mark email as processed
+                processed_email = ProcessedEmail(
+                            email_id=email_id, account_id=inbox_id
+                        )
 
-                            db.session.add(processed_email)
-                            db.session.add(detected_bill)
-                            db.session.commit()
+                db.session.add(processed_email)
+                db.session.add(new_bill)
+                db.session.commit()
 
+                # Extract bill information using LLM
+                extract_bill_info(new_bill.id, pdf_file_path)
+
+    # Close the Google client app
     google_app.close()
+
+@celery.task()
+def extract_bill_info(bill_id, pdf_file_path: str) -> dict:
+    """
+    Extract bill information from email body or PDF file.
+    
+    Args:
+        email_body (str): The body of the email containing bill information.
+        pdf_path (str): The path to the PDF file containing bill details.
+        
+    Returns:
+        dict: A dictionary containing extracted bill information.
+    """
+
+    llm_client = LLMClient(celery.app.config['GEMINI_API_KEY'])
+
+    extracted_info = llm_client.extract_bill_info(pdf_file_path)
+
+    # If the extraction is successful, update the Bill model
+    if extracted_info:
+        bill = Bill.query.filter(Bill.id == bill_id).first()
+        if bill:
+            bill.amount = extracted_info.get("total_due_amount", 0.0)
+            bill.due_date = extracted_info.get("due_date", date.today() + timedelta(days=30))
+            bill.bill_date = extracted_info.get("invoice_date", date.today())
+            db.session.commit()
+            logger.info(f"Bill {bill_id} updated with extracted info: {extracted_info}")
+        else:
+            logger.warning(f"Bill with ID {bill_id} not found.")
+    else:
+        logger.warning(f"Failed to extract bill information from PDF: {pdf_file_path}")
+    

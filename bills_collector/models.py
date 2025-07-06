@@ -130,7 +130,7 @@ class Bill(db.Model):
     amount: float
     bill_date: datetime
     due_date: datetime
-    status: Enum
+    status: str
     bill_url: str
 
     __tablename__ = "bills"

@@ -43,6 +43,8 @@ class Config(object):
     broker_transport_options = { 'global_keyprefix': 'bills_collector' }
     # result_backend = env.str('CELERY_RESULT_BACKEND')
 
+    GEMINI_API_KEY = env.str('GEMINI_API_KEY', '')
+
 class ProductionConfig(Config):
     FLASK_ENV = 'production'
 
