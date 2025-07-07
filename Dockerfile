@@ -1,24 +1,47 @@
-FROM python:3.11-slim
+# Install uv
+FROM python:3.12-slim AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Set working directory
+# Change the working directory to the `app` directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project --no-editable
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the project into the intermediate image
+ADD . /app
 
-# Copy application code
+# Sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-editable
+
+##########################################
+# Build frontend
+##########################################
+FROM node:22-slim AS frontend-build
+
+# Change the working directory to the `app` directory
+WORKDIR /app
+
+COPY package*.json /app/
+RUN npm ci
+
 COPY . .
+RUN npm run build
 
-# Create non-root user
-RUN useradd -m appuser && chown -R appuser:appuser /app
-USER appuser
+FROM python:3.12-slim
+
+# Copy the environment, but not the source code
+COPY --from=builder --chown=app:app /app/.venv /app/.venv
+
+# Install application into container
+COPY . .
+COPY --from=frontend-build /app/bills_collector/static/dist /app/bills_collector/static/dist
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+ENV PATH="/app/.venv/bin:$PATH"
+CMD ["gunicorn", "-w 4", "-b 0.0.0.0:5000", "--preload", "bills_collector.app:create_app()"]
+
