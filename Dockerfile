@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-install-project --no-editable
 
 # Copy the project into the intermediate image
-ADD . /app
+COPY . /app
 
 # Sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -29,28 +29,22 @@ WORKDIR /app
 COPY package*.json /app/
 RUN npm ci
 
-COPY . .
+COPY . /app
 RUN npm run build
-
-RUN ls -lash /app/bills_collector/static
-RUN ls -lash /app/bills_collector
-
 
 ##########################################
 # Prepare the final image
 ##########################################
 FROM python:3.12-slim
 
+WORKDIR /app
+
 # Copy the environment, but not the source code
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
 
 # Install application into container
-COPY . .
+COPY . /app
 COPY --from=frontend-build /app/bills_collector/static /app/bills_collector/static
-
-RUN ls -lash /app/bills_collector/static
-RUN ls -lash /app/bills_collector
-
 
 # Run the application
 ENV PATH="/app/.venv/bin:$PATH"
