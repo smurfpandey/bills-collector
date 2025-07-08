@@ -32,6 +32,13 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+RUN ls -lash /app/bills_collector/static
+RUN ls -lash /app/bills_collector
+
+
+##########################################
+# Prepare the final image
+##########################################
 FROM python:3.12-slim
 
 # Copy the environment, but not the source code
@@ -39,7 +46,11 @@ COPY --from=builder --chown=app:app /app/.venv /app/.venv
 
 # Install application into container
 COPY . .
-COPY --from=frontend-build /app/bills_collector/static/dist /app/bills_collector/static/dist
+COPY --from=frontend-build /app/bills_collector/static /app/bills_collector/static
+
+RUN ls -lash /app/bills_collector/static
+RUN ls -lash /app/bills_collector
+
 
 # Run the application
 ENV PATH="/app/.venv/bin:$PATH"
