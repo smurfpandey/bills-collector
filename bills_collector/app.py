@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
+
 # Core python packages
 import logging
 from os import environ
@@ -7,6 +8,7 @@ import sys
 
 # 3rd party python packages
 from flask import Flask, render_template
+from werkzeug.middleware.proxy_fix import ProxyFix
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -20,19 +22,16 @@ from bills_collector.extensions import (
     celery,
     login_manager,
     oauth,
-    csrf
+    csrf,
 )
 from bills_collector.routes import views, auth, connect, api
 
 # Initialize Sentry
 sentry_sdk.init(
-    dsn=environ.get('SENTRY_DSN'),
-    integrations=[
-        FlaskIntegration(),
-        CeleryIntegration(),
-        SqlalchemyIntegration()
-    ]
+    dsn=environ.get("SENTRY_DSN"),
+    integrations=[FlaskIntegration(), CeleryIntegration(), SqlalchemyIntegration()],
 )
+
 
 def create_app():
     """Create application factory, as explained here:
@@ -42,14 +41,18 @@ def create_app():
     """
     app = Flask(__name__.split(".")[0])
 
-    config_type = environ.get('CONFIG_TYPE', default='bills_collector.config.DevelopmentConfig')
+    config_type = environ.get(
+        "CONFIG_TYPE", default="bills_collector.config.DevelopmentConfig"
+    )
     app.config.from_object(config_type)
 
+    # ProxyFix for production environment
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     # config file has STATIC_FOLDER='/static/dist'
-    app.static_url_path=app.config.get('STATIC_FOLDER')
+    app.static_url_path = app.config.get("STATIC_FOLDER")
     # set the absolute path to the static folder
-    app.static_folder=app.root_path + app.static_url_path
+    app.static_folder = app.root_path + app.static_url_path
 
     register_extensions(app)
     register_blueprints(app)
@@ -62,13 +65,14 @@ def create_app():
     @app.context_processor
     def inject_account_enum():
         account_dict = {
-            'gmail': {'name': 'Gmail'},
-            'zoho': {'name': 'Zoho Mail'},
-            'google_drive': {'name': 'Google Drive'}
+            "gmail": {"name": "Gmail"},
+            "zoho": {"name": "Zoho Mail"},
+            "google_drive": {"name": "Google Drive"},
         }
         return dict(AccountTypeDict=account_dict)
 
     return app
+
 
 def register_extensions(app):
     """Register Flask extensions."""
@@ -80,6 +84,7 @@ def register_extensions(app):
     oauth.init_app(app)
     csrf.init_app(app)
 
+
 def register_blueprints(app):
     """Register Flask blueprints."""
 
@@ -90,6 +95,7 @@ def register_blueprints(app):
     app.register_blueprint(connect.connect_bp)
     app.register_blueprint(api.api_bp)
 
+
 def register_errorhandlers(app):
     """Register error handlers."""
 
@@ -99,10 +105,13 @@ def register_errorhandlers(app):
         app.logger.error(error)
         # If a HTTPException, pull the `code` attribute; default to 500
         error_code = getattr(error, "code", 500)
-        return render_template(f"{error_code}.html", error_message=error.description), error_code
+        return render_template(
+            f"{error_code}.html", error_message=error.description
+        ), error_code
 
     for errcode in [400, 404, 500]:
         app.errorhandler(errcode)(render_error)
+
 
 def register_shellcontext(app):
     """Register shell context objects."""
@@ -113,13 +122,14 @@ def register_shellcontext(app):
 
     app.shell_context_processor(shell_context)
 
+
 def configure_logger(app):
     """Configure loggers."""
     handler = logging.StreamHandler(sys.stdout)
-    app.logger.setLevel(app.config['LOG_LEVEL'].upper())
+    app.logger.setLevel(app.config["LOG_LEVEL"].upper())
     if not app.logger.handlers:
         app.logger.addHandler(handler)
 
-    log = logging.getLogger('authlib')
+    log = logging.getLogger("authlib")
     log.addHandler(logging.StreamHandler(sys.stdout))
     log.setLevel(logging.DEBUG)
