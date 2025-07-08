@@ -214,6 +214,25 @@ function App() {
 
                 mdlChooseStorage.hide();
             });
+        } else if (pageName === 'home') {
+            document.getElementById('ddlSelectAccountType').addEventListener('change', function () {
+                const selectedAccountType = this.value;
+                if (selectedAccountType === '') {
+                    return;
+                }
+                const linkAccountUrl = '/connect/google?type=' + selectedAccountType;
+                document.getElementById('lnkLinkAccount').href = linkAccountUrl;
+
+                // listen for second window to close
+                // refresh the page when it closes
+                window.addEventListener('message', function (event) {
+                    if (event.data === 'account_linked') {
+                        // refresh the page when account is linked
+                        window.location.reload();
+                    }
+                });
+                
+            });
         }
 
         [...document.getElementsByClassName('event-refresh-account-token')].forEach(function (elem) {

@@ -3,3 +3,32 @@
 node_modules
 .pytest_cache
 tmp
+
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+*.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+node_modules/
+dist/
+archive/
+tmp/
+
+docker-compose.yml
+Dockerfile*

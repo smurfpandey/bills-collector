@@ -20,9 +20,8 @@
         <div class="text-center lg:w-2/3 w-full">
             <h1 class="title-font sm:text-4xl text-3xl mb-4 font-medium	 text-white font-mono">
                 Connected Accounts </h1>
-            <p class="leading-relaxed mb-8 font-normal">The University of Huddersfield's School of Art, Design
-                and Architecture presents the work of 10 of its award-winning
-                interior design graduates in this school show for Virtual Design Festival.
+            <p class="leading-relaxed mb-8 font-normal">Link your accounts to Bills Rover to extract your bills
+                and store them in a location of your choice in Google Drive. You can link multiple accounts and manage them from a single dashboard.
             </p>
 
             <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -138,17 +137,17 @@
                 <div class="grid gap-4 mb-4 grid-cols-2">
                     <div class="col-span-2">
                         <label for="category"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Account</label>
-                        <select id="category"
+                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Account Type</label>
+                        <select id="ddlSelectAccountType" name="account_type"                            
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                            <option selected="">Select Account</option>
-                            <option value="gmail">Gmail</option>
-                            <option value="zoho">Zoho Mail</option>
+                            <option selected="" value="">Select Account</option>
+                            <option value="gmail">Gmail</option>                            
                             <option value="google_drive">Google Drive</option>
                         </select>
                     </div>
                 </div>
-                <button type="submit"
+                <a id="lnkLinkAccount" href="#" target="_blank"
+                    disabled
                     class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-hidden focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                     <svg class="me-1 -ms-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
                         xmlns="http://www.w3.org/2000/svg">
@@ -156,8 +155,8 @@
                             d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
                             clip-rule="evenodd"></path>
                     </svg>
-                    Add new product
-                </button>
+                    Link Account
+                </a>
             </form>
         </div>
     </div>
